@@ -9,11 +9,11 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 reqs = parse_requirements("requirements.txt", session=False)
-install_requires = [str(ir.req) for ir in reqs]
+install_requires = [str(ir.requirement) for ir in reqs]
 
 setuptools.setup(
     name="notion",
-    version="0.0.26",
+    version="0.0.27",
     author="Jamie Alexandre",
     author_email="jamalex+python@gmail.com",
     description="Unofficial Python API client for Notion.so",
