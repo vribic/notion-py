@@ -425,6 +425,27 @@ class Block(Record):
             ]
         )
 
+    def change_lock(self, locked):
+        command = "update"
+        arguments = dict(block_locked=locked, block_locked_by=self._client.current_user.id)
+
+        with self._client.as_atomic_transaction():
+            self._client.submit_transaction(
+                build_operation(
+                    id=self.id,
+                    path=["format"],
+                    args=arguments,
+                    command=command,
+                )
+            )
+
+        # update the local block cache to reflect the updates
+        self._client.refresh_records(
+            block=[
+                self.id
+            ]
+        )
+
 
 class DividerBlock(Block):
 
@@ -740,9 +761,21 @@ class CollectionViewBlockViews(Children):
     child_list_key = "view_ids"
 
     def _get_block(self, view_id):
-        return self._client.get_collection_view(
+        view = self._client.get_collection_view(
             view_id, collection=self._parent.collection
         )
+
+        i = 0
+        while view is None:
+            i += 1
+            if i > 20:
+                return None
+            time.sleep(0.1)
+            view = self._client.get_collection_view(
+                view_id, collection=self._parent.collection
+            )
+
+        return view
 
     def add_new(self, view_type="table"):
         if not self._parent.collection:
